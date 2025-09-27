@@ -22,43 +22,46 @@
 import CategoryPrice from '@/components/CategoryPrice.vue';
 import Categories from '@/constants/categories';
 import { usePricesStore } from '@/stores/prices';
+import { ref, computed, onMounted } from 'vue';
+
+const prices = ref({});
+const categoryList = computed(() => Object.keys(Categories));
+const isLoading = computed(() => {
+    const store = usePricesStore();
+    return store.isLoading;
+});
+const errorMessage = computed(() => {
+    const store = usePricesStore();
+    return store.errorMessage;
+});
+const updateTime = computed(() => {
+    const store = usePricesStore();
+    return store.updatedTime;
+});
+const getPriceData = (category) => {
+    const store = usePricesStore();
+    return store.getPricesByCategory(category);
+};
+
 
 export default {
     name: 'PriceOverview',
-    data() {
-        return {
-            prices: {},
-        };
-    },
     components: {
         CategoryPrice,
     },
-    computed: {
-        categoryList() {
-            return Object.keys(Categories);
-        },
-        isLoading() {
+    setup() {
+        onMounted(() => {
             const store = usePricesStore();
-            return store.isLoading;
-        },
-        errorMessage() {
-            const store = usePricesStore();
-            return store.errorMessage;
-        },
-        updateTime() {
-            const store = usePricesStore();
-            return store.updatedTime;
-        },
-    },
-    methods: {
-        getPriceData(category) {
-            const store = usePricesStore();
-            return store.getPricesByCategory(category);
-        },
-    },
-    created() {
-        const store = usePricesStore();
-        store.fetchPrices();
+            store.fetchPrices();
+        });
+        return {
+            prices,
+            categoryList,
+            isLoading,
+            errorMessage,
+            updateTime,
+            getPriceData,
+        };
     },
 };
 </script>

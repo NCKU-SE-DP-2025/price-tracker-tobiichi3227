@@ -30,7 +30,7 @@
 
 <script>
 import { useNewsStore } from '@/stores/news';
-import { onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import NewsItem from '@/components/NewsItem.vue';
 import NewsDialog from '@/components/NewsDialog.vue';
 
@@ -39,44 +39,50 @@ export default {
         NewsItem,
         NewsDialog,
     },
-    data() {
-        return {
-            prompt: '',
-            newsStore: useNewsStore(),
-            selectedNews: null,
-            isDialogVisible: false,
-        };
-    },
-    created() {
-        onMounted(() => {
-            this.newsStore.fetchNews();
+    setup() {
+        const prompt = ref('');
+        const newsStore = useNewsStore();
+        const selectedNews = ref(null);
+        const isDialogVisible = ref(false);
+
+        const newsList = computed(() => {
+            return newsStore.getNews;
         });
-    },
-    computed: {
-        newsList() {
-            return this.newsStore.getNews;
-        },
-        isLoading() {
-            return this.newsStore.isLoading;
-        },
-        isEmpty() {
-            return this.newsStore.newsList.length === 0;
-        },
-    },
-    methods: {
-        searchNewsBasedOnPrompt() {
-            if (this.prompt.trim()) {
-                this.newsStore.promptSearchNews(this.prompt);
-                this.prompt = '';
+        const isLoading = computed(() => {
+            return newsStore.isLoading;
+        });
+        const isEmpty = computed(() => {
+            return newsStore.newsList.length === 0;
+        });
+
+        const searchNewsBasedOnPrompt = () => {
+            if (prompt.value.trim()) {
+                newsStore.promptSearchNews(prompt.value);
+                prompt.value = '';
             }
-        },
-        showDialog(news) {
-            this.selectedNews = news;
-            this.isDialogVisible = true;
-        },
-        fetchSummary(content, index) {
-            this.newsStore.fetchNewsSummary(content, index);
-        },
+        };
+        const showDialog = (news) => {
+            selectedNews.value = news;
+            isDialogVisible.value = true;
+        };
+        const fetchSummary = (content, index) => {
+            newsStore.fetchNewsSummary(content, index);
+        };
+        onMounted(() => {
+            newsStore.fetchNews();
+        });
+        return {
+            prompt,
+            newsList,
+            isLoading,
+            isEmpty,
+            selectedNews,
+            isDialogVisible,
+            searchNewsBasedOnPrompt,
+            showDialog,
+            fetchSummary,
+            newsStore,
+        };
     },
 };
 </script>

@@ -43,52 +43,64 @@ import { usePricesStore } from '@/stores/prices';
 import Categories from '@/constants/categories';
 import TrendingTable from '@/components/TrendingTable.vue';
 import TrendingChart from '@/components/TrendingChart.vue';
+import { ref, computed, onMounted, watch } from 'vue';
+
+const prices = ref({
+    selectedCategory: '',
+    selectedProduct: '',
+    productList: [],
+});
+
+const store = computed(() => {
+    return usePricesStore();
+});
+
+const categoryKeys = computed(() => {
+    return Object.keys(Categories);
+});
+
+const products = computed(() => {
+    return prices.value.selectedCategory
+        ? store.value.getPricesByCategory(prices.value.selectedCategory)
+        : [];
+});
+
+const categoryName = (category) => {
+    return Categories[category];
+};
 
 export default {
     components: {
         TrendingTable,
         TrendingChart,
     },
-    data() {
-        return {
-            selectedCategory: '',
-            selectedProduct: '',
-            productList: [],
-        };
-    },
-    computed: {
-        store() {
-            return usePricesStore();
-        },
-        categoryKeys() {
-            return Object.keys(Categories);
-        },
-        products() {
-            return this.selectedCategory
-                ? this.store.getPricesByCategory(this.selectedCategory)
-                : [];
-        },
-    },
-    methods: {
-        categoryName(category) {
-            return Categories[category];
-        },
-    },
-    watch: {
-        selectedCategory() {
-            this.selectedProduct = '';
+    setup() {
+        onMounted(() => {
             const store = usePricesStore();
-            this.productList = store.getProductList(this.selectedCategory);
-            this.productData = null;
-        },
-        selectedProduct() {
-            console.log(this.selectedProduct);
-        },
-    },
-    created() {
-        const store = usePricesStore();
-        store.fetchPrices();
-    },
+            store.fetchPrices();
+        });
+        watch(
+            () => prices.value.selectedCategory,
+            (newCategory) => {
+                prices.value.selectedProduct = '';
+                prices.value.productList = store.value.getPricesByCategory(
+                    newCategory
+                );
+            }
+        );
+        watch(
+            () => prices.value.selectedProduct,
+            (newProduct) => {
+                console.log(newProduct);
+            }
+        );
+        return {
+            prices,
+            categoryKeys,
+            products,
+            categoryName,
+        };
+    }
 };
 </script>
 

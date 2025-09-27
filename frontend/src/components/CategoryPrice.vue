@@ -23,8 +23,8 @@
 </template>
 
 <script>
+import { ref } from 'vue';
 import Categories from '@/constants/categories';
-
 export default {
     props: {
         category: {
@@ -44,24 +44,29 @@ export default {
             required: false,
         },
     },
-    computed: {
-        categoryName() {
-            return Categories[this.category];
-        },
-        latestDataTime() {
-            let timeTmp = this.priceData[0].時間終點.split('-');
-            return timeTmp[0] + '.' + timeTmp[1];
-        },
-    },
-    methods: {
-        latestPrice(prices_str) {
+    setup(props) {
+        const categoryName = ref(Categories[props.category]);
+
+        const latestDataTime = ref('');
+        if (props.priceData.length > 0) {
+            let timeTmp = props.priceData[0].時間終點.split('-');
+            latestDataTime.value = timeTmp[0] + '.' + timeTmp[1];
+        }
+
+        const latestPrice = (prices_str) => {
             let number = prices_str.split(',').map(Number);
             let i = number.length - 1;
             while (i >= 0 && number[i] == 0) {
                 i--;
             }
             return i == -1 ? '-' : number[i];
-        },
+        };
+
+        return {
+            categoryName,
+            latestDataTime,
+            latestPrice,
+        };
     },
 };
 </script>

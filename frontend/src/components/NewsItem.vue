@@ -37,41 +37,50 @@
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth';
+import { computed } from 'vue';
 import { useNewsStore } from '@/stores/news';
+import { useAuthStore } from '@/stores/auth';
+
 export default {
     props: {
         news: {
             type: Object,
             required: true,
-        },
+        }
     },
-    computed: {
-        hasDetails() {
-            return this.news.reason && this.news.summary;
-        },
-        shortContent() {
-            return this.news.content.length > 200
-                ? this.news.content.substr(0, 200) + '...'
-                : this.news.content;
-        },
-        isLoggedIn() {
+    setup(props, { emit }) {
+        const hasDetails = computed(() => {
+            return props.news.reason && props.news.summary;
+        });
+        const shortContent = computed(() => {
+            return props.news.content.length > 200
+                ? props.news.content.substr(0, 200) + '...'
+                : props.news.content;
+        });
+        const isLoggedIn = computed(() => {
             const userStore = useAuthStore();
             return userStore.isLoggedIn;
-        },
-    },
-    methods: {
-        showDialog() {
-            this.$emit('show-dialog');
-        },
-        fetchSummary() {
+        });
+
+        const showDialog = () => {
+            emit('show-dialog');
+        };
+        const fetchSummary = () => {
             if (this.isLoading) return;
-            this.isLoading = true;
-            this.$emit('fetch-summary');
-        },
-        toggleUpvote(newsId) {
+            this.isLoading =  true;
+            emit('fetch-summary');
+        };
+        const toggleUpvote = (newsId) => {
             useNewsStore().toggleUpvote(newsId);
-        },
+        };
+        return {
+            hasDetails,
+            shortContent,
+            isLoggedIn,
+            showDialog,
+            fetchSummary,
+            toggleUpvote,
+        };
     },
 };
 </script>

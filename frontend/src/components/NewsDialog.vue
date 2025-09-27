@@ -19,6 +19,7 @@
 </template>
 
 <script>
+import { ref, watch, computed } from 'vue';
 export default {
     props: {
         news: {
@@ -30,16 +31,31 @@ export default {
             default: false,
         },
     },
-    methods: {
-        close() {
-            this.$emit('update:visible', false);
-        },
-    },
-    computed: {
-        formattedContent() {
-            if (!this.news.content) return '';
-            return this.news.content.split('\r\n');
-        },
+    setup(props, { emit }) {
+        const isVisible = ref(props.visible);
+
+        watch(
+            () => props.visible,
+            (newVal) => {
+                isVisible.value = newVal;
+            }
+        );
+
+        const close = () => {
+            isVisible.value = false;
+            emit('update:visible', false);
+        };
+
+        const formattedContent = computed(() => {
+            if (!props.news.content) return '';
+            return props.news.content.split('\r\n');
+        });
+
+        return {
+            isVisible,
+            close,
+            formattedContent,
+        };
     },
 };
 </script>

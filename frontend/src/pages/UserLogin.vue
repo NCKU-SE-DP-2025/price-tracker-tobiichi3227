@@ -29,25 +29,27 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth';
+import { ref, computed } from 'vue';
+
+const username = ref('');
+const password = ref('');
+const loginError = computed(() => {
+    const userStore = useAuthStore();
+    return userStore.getLoginError;
+});
+const login = () => {
+    const userStore = useAuthStore();
+    userStore.login(username.value, password.value);
+};
 
 export default {
-    data() {
+    setup() {
         return {
-            username: '',
-            password: '',
+            username,
+            password,
+            loginError,
+            login,
         };
-    },
-    methods: {
-        login() {
-            const userStore = useAuthStore();
-            userStore.login(this.username, this.password);
-        },
-    },
-    computed: {
-        loginError() {
-            const userStore = useAuthStore();
-            return userStore.getLoginError;
-        },
     },
 };
 </script>

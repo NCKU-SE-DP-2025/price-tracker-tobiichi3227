@@ -43,45 +43,52 @@
 
 <script>
 import { useAuthStore } from '@/stores/auth';
+import { ref } from 'vue';
+
+const username = ref('');
+const password = ref('');
+const passwordConfirm = ref('');
+const errors = ref({
+    username: '',
+    password: '',
+    passwordConfirm: '',
+});
+
+const validate = () => {
+    let valid = true;
+    errors.value = { username: '', password: '', passwordConfirm: '' };
+
+    if (!username.value.trim()) {
+        errors.value.username = 'Username is required.';
+        valid = false;
+    }
+    if (!password.value) {
+        errors.value.password = 'Password is required.';
+        valid = false;
+    }
+    if (password.value !== passwordConfirm.value) {
+        errors.value.passwordConfirm = 'Passwords do not match!';
+        valid = false;
+    }
+    return valid;
+};
+
+const register = () => {
+    if (validate()) {
+        const userStore = useAuthStore();
+        userStore.register(username.value, password.value);
+    }
+};
 
 export default {
-    data() {
+    setup() {
         return {
-            username: '',
-            password: '',
-            passwordConfirm: '',
-            errors: {
-                username: '',
-                password: '',
-                passwordConfirm: '',
-            },
+            username,
+            password,
+            passwordConfirm,
+            errors,
+            register,
         };
-    },
-    methods: {
-        register() {
-            if (this.validate()) {
-                const userStore = useAuthStore();
-                userStore.register(this.username, this.password);
-            }
-        },
-        validate() {
-            let valid = true;
-            this.errors = { username: '', password: '', passwordConfirm: '' };
-
-            if (!this.username.trim()) {
-                this.errors.username = 'Username is required.';
-                valid = false;
-            }
-            if (!this.password) {
-                this.errors.password = 'Password is required.';
-                valid = false;
-            }
-            if (this.password !== this.passwordConfirm) {
-                this.errors.passwordConfirm = 'Passwords do not match!';
-                valid = false;
-            }
-            return valid;
-        },
     },
 };
 </script>
