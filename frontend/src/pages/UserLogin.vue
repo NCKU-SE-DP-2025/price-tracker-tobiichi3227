@@ -3,11 +3,23 @@
         <h1>使用者登入</h1>
         <div class="container">
             <form @submit.prevent="login">
-                <input v-model="username" type="text" placeholder="Username" required>
-                <input v-model="password" type="password" placeholder="Password" required>
+                <input
+                    v-model="username"
+                    type="text"
+                    placeholder="Username"
+                    required
+                />
+                <input
+                    v-model="password"
+                    type="password"
+                    placeholder="Password"
+                    required
+                />
                 <p v-if="loginError" class="error">{{ loginError }}</p>
                 <div class="ops">
-                    <button type="button" id="register"><RouterLink to="/register">註冊</RouterLink></button>
+                    <button type="button" id="register">
+                        <RouterLink to="/register">註冊</RouterLink>
+                    </button>
                     <button type="submit" id="login">登入</button>
                 </div>
             </form>
@@ -22,22 +34,22 @@ export default {
     data() {
         return {
             username: '',
-            password: ''
+            password: '',
         };
     },
     methods: {
         login() {
             const userStore = useAuthStore();
             userStore.login(this.username, this.password);
-        }
+        },
     },
     computed: {
-        loginError(){
+        loginError() {
             const userStore = useAuthStore();
             return userStore.getLoginError;
-        }
-    }
-}
+        },
+    },
+};
 </script>
 
 <style scoped>
@@ -49,7 +61,7 @@ export default {
     box-sizing: border-box;
 }
 
-.error{
+.error {
     color: red;
 }
 
@@ -58,57 +70,57 @@ export default {
     background: #fff;
     padding: 2em;
     border-radius: 1em;
-    box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-form{
+form {
     display: flex;
     flex-direction: column;
 }
 
-form > input{
-    margin: .25em 0;
-    padding: .5em 1em;
+form > input {
+    margin: 0.25em 0;
+    padding: 0.5em 1em;
     font-size: 1.2em;
     border: 1px solid #ccc;
-    border-radius: .5em;
+    border-radius: 0.5em;
 }
 
-.ops{
-    margin-top: .5em;
+.ops {
+    margin-top: 0.5em;
     display: flex;
     justify-content: center;
 }
 
-.ops > button{
-    padding: .5em 1em;
-    margin: 0 .5em;
+.ops > button {
+    padding: 0.5em 1em;
+    margin: 0 0.5em;
     font-size: 1.2em;
     border: none;
-    border-radius: .5em;
+    border-radius: 0.5em;
     cursor: pointer;
 }
 
-#register{
-    background-color: #F3F3F3;
+#register {
+    background-color: #f3f3f3;
     border: 1px solid #ccc;
 }
 
-#register > a{
+#register > a {
     text-decoration: none;
     color: #000;
 }
 
-#register:hover{
+#register:hover {
     background-color: #e8e8e8;
 }
 
-#login{
+#login {
     background-color: #5bc0de;
     color: #fff;
 }
 
-#login:hover{
+#login:hover {
     background-color: #46b8da;
 }
 </style>

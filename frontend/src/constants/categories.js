@@ -13,7 +13,7 @@ const Categories = {
     INSTANT_NOODLES: '泡麵',
     FLOUR: '麵粉',
     TOOTHPASTE: '牙膏',
-    SUGAR: '糖'
+    SUGAR: '糖',
 };
 
 export default Categories;

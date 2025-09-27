@@ -8,7 +8,7 @@
                 <tr>
                     <th>商品名稱</th>
                     <th>規格</th>
-                    <th>{{latestDataTime}} 最新價格</th>
+                    <th>{{ latestDataTime }} 最新價格</th>
                 </tr>
             </thead>
             <tbody>
@@ -29,40 +29,40 @@ export default {
     props: {
         category: {
             type: String,
-            required: true
+            required: true,
         },
         priceData: {
             type: Array,
-            required: true
+            required: true,
         },
         isLoading: {
             type: Boolean,
-            required: true
+            required: true,
         },
         errorMessage: {
             type: String,
-            required: false
+            required: false,
         },
     },
     computed: {
         categoryName() {
             return Categories[this.category];
         },
-        latestDataTime(){
+        latestDataTime() {
             let timeTmp = this.priceData[0].時間終點.split('-');
             return timeTmp[0] + '.' + timeTmp[1];
-        }
+        },
     },
     methods: {
         latestPrice(prices_str) {
             let number = prices_str.split(',').map(Number);
             let i = number.length - 1;
-            while (i >= 0 && number[i]==0) {
+            while (i >= 0 && number[i] == 0) {
                 i--;
             }
-            return i==-1 ? "-" : number[i];
-        }
-    }
+            return i == -1 ? '-' : number[i];
+        },
+    },
 };
 </script>
 
@@ -76,21 +76,22 @@ table {
     background-color: white;
     /* text-align: center; */
 }
-th, td {
+th,
+td {
     border: 1px solid #ddd;
     text-align: center;
-    padding: .5em 1em;
+    padding: 0.5em 1em;
 }
-th{
+th {
     background-color: #355f81;
     color: white;
 }
-h2{
-    margin-bottom: .5em;
+h2 {
+    margin-bottom: 0.5em;
     font-size: 1.5em;
     font-weight: bold;
 }
-.category-price-wrapper{
+.category-price-wrapper {
     background-color: white;
     border-radius: 1em;
     padding: 2em;

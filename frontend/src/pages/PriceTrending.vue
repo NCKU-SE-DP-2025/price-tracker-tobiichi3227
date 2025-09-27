@@ -3,20 +3,36 @@
         <h1>物價趨勢</h1>
         <div class="content">
             <div class="selects">
-
                 <select v-model="selectedCategory">
                     <option disabled value="">請選擇商品類別</option>
-                    <option v-for="category in categoryKeys" :key="category" :value="category">{{
-                        categoryName(category)}}</option>
+                    <option
+                        v-for="category in categoryKeys"
+                        :key="category"
+                        :value="category"
+                    >
+                        {{ categoryName(category) }}
+                    </option>
                 </select>
                 <select v-model="selectedProduct">
                     <option disabled value="">請選擇商品</option>
-                    <option v-for="product in products" :key="product.產品名稱" :value="product">{{ product.產品名稱 }}</option>
+                    <option
+                        v-for="product in products"
+                        :key="product.產品名稱"
+                        :value="product"
+                    >
+                        {{ product.產品名稱 }}
+                    </option>
                 </select>
             </div>
             <div v-if="selectedProduct" class="visualize">
-                <TrendingChart v-if="selectedProduct" :data="selectedProduct"></TrendingChart>
-                <TrendingTable v-if="selectedProduct" :data="selectedProduct"></TrendingTable>
+                <TrendingChart
+                    v-if="selectedProduct"
+                    :data="selectedProduct"
+                ></TrendingChart>
+                <TrendingTable
+                    v-if="selectedProduct"
+                    :data="selectedProduct"
+                ></TrendingTable>
             </div>
         </div>
     </div>
@@ -31,7 +47,7 @@ import TrendingChart from '@/components/TrendingChart.vue';
 export default {
     components: {
         TrendingTable,
-        TrendingChart
+        TrendingChart,
     },
     data() {
         return {
@@ -48,13 +64,15 @@ export default {
             return Object.keys(Categories);
         },
         products() {
-            return this.selectedCategory ? this.store.getPricesByCategory(this.selectedCategory) : [];
+            return this.selectedCategory
+                ? this.store.getPricesByCategory(this.selectedCategory)
+                : [];
         },
     },
     methods: {
         categoryName(category) {
             return Categories[category];
-        }
+        },
     },
     watch: {
         selectedCategory() {
@@ -65,15 +83,14 @@ export default {
         },
         selectedProduct() {
             console.log(this.selectedProduct);
-        }
+        },
     },
     created() {
         const store = usePricesStore();
         store.fetchPrices();
-    }
+    },
 };
 </script>
-
 
 <style scoped>
 .wrapper {
@@ -93,17 +110,16 @@ export default {
     width: 100%;
 }
 
-
 .selects {
     display: flex;
     justify-content: flex-start;
 }
 
-.selects>select {
-    padding: .5em;
+.selects > select {
+    padding: 0.5em;
     font-size: 1.1em;
     margin-right: 1em;
-    border-radius: .5em;
+    border-radius: 0.5em;
     border: 1px solid #ccc;
     outline: none;
     cursor: pointer;

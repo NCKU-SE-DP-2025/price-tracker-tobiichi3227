@@ -13,14 +13,17 @@ export const useAuthStore = defineStore('auth', {
         async register(username, password) {
             this.isLoading = true;
             try {
-                await axios.post('http://localhost:8000/api/v1/users/register', {
-                    username: username,
-                    password: password,
-                },
+                await axios.post(
+                    'http://localhost:8000/api/v1/users/register',
+                    {
+                        username: username,
+                        password: password,
+                    }
                 );
                 await this.login(username, password);
             } catch (error) {
-                this.errorMessage = error.response?.data.detail || 'Failed to register';
+                this.errorMessage =
+                    error.response?.data.detail || 'Failed to register';
             } finally {
                 this.isLoading = false;
             }
@@ -28,19 +31,28 @@ export const useAuthStore = defineStore('auth', {
         async login(username, password) {
             this.isLoading = true;
             try {
-                const response = await axios.post('http://localhost:8000/api/v1/users/login', {
-                    username: username,
-                    password: password,
-                },
-                    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+                const response = await axios.post(
+                    'http://localhost:8000/api/v1/users/login',
+                    {
+                        username: username,
+                        password: password,
+                    },
+                    {
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                    }
                 );
                 this.accessToken = response.data.access_token;
                 localStorage.setItem('accessToken', this.accessToken);
-                axios.defaults.headers.common['Authorization'] = `Bearer ${this.accessToken}`;
+                axios.defaults.headers.common[
+                    'Authorization'
+                ] = `Bearer ${this.accessToken}`;
                 await this.fetchUser();
                 router.push({ name: 'PriceOverview' });
             } catch (error) {
-                this.errorMessage = error.response?.data.detail || 'Failed to login';
+                this.errorMessage =
+                    error.response?.data.detail || 'Failed to login';
             } finally {
                 this.isLoading = false;
             }
@@ -51,11 +63,12 @@ export const useAuthStore = defineStore('auth', {
             localStorage.removeItem('accessToken');
             delete axios.defaults.headers.common['Authorization'];
             router.push({ name: 'PriceOverview' });
-
         },
         async fetchUser() {
             try {
-                const response = await axios.get('http://localhost:8000/api/v1/users/me');
+                const response = await axios.get(
+                    'http://localhost:8000/api/v1/users/me'
+                );
                 this.user = response.data.username;
                 this.errorMessage = '';
             } catch (error) {
@@ -66,14 +79,16 @@ export const useAuthStore = defineStore('auth', {
             const token = localStorage.getItem('accessToken');
             if (token) {
                 this.accessToken = token;
-                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                axios.defaults.headers.common[
+                    'Authorization'
+                ] = `Bearer ${token}`;
                 this.fetchUser();
             }
-        }
+        },
     },
     getters: {
         isLoggedIn: (state) => !!state.accessToken,
         getUserName: (state) => state.user,
         getLoginError: (state) => state.errorMessage,
-    }
+    },
 });

@@ -11,7 +11,10 @@
                 <template v-for="year in years" :key="year">
                     <tr>
                         <td>{{ year }}</td>
-                        <template v-for="(value, monthIndex) in getYearData(year)" :key="year + '-month-' + monthIndex">
+                        <template
+                            v-for="(value, monthIndex) in getYearData(year)"
+                            :key="year + '-month-' + monthIndex"
+                        >
                             <td>{{ valueDisplay(value) }}</td>
                         </template>
                     </tr>
@@ -26,17 +29,30 @@ export default {
     props: {
         data: {
             type: Object,
-            required: true
-        }
+            required: true,
+        },
     },
     data() {
         return {
-            yearData: {}
+            yearData: {},
         };
     },
     computed: {
         months() {
-            return ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return [
+                'Jan',
+                'Feb',
+                'Mar',
+                'Apr',
+                'May',
+                'Jun',
+                'Jul',
+                'Aug',
+                'Sep',
+                'Oct',
+                'Nov',
+                'Dec',
+            ];
         },
         years() {
             const startYear = new Date(this.data.時間起點).getFullYear();
@@ -66,7 +82,11 @@ export default {
                     } else if (year === endYear && month > endMonth) {
                         yearPrices.push('0');
                     } else {
-                        yearPrices.push(this.data.統計值.split(',')[month + (year - startYear) * 12 - startMonth]);
+                        yearPrices.push(
+                            this.data.統計值.split(',')[
+                                month + (year - startYear) * 12 - startMonth
+                            ]
+                        );
                     }
                 }
                 this.yearData[year] = yearPrices;
@@ -74,7 +94,7 @@ export default {
         },
         valueDisplay(value) {
             return value === '0' ? '-' : value;
-        }
+        },
     },
     watch: {
         data: {
@@ -83,12 +103,12 @@ export default {
                 if (newVal) {
                     this.processInitData();
                 }
-            }
-        }
+            },
+        },
     },
     created() {
         this.processInitData();
-    }
+    },
 };
 </script>
 
