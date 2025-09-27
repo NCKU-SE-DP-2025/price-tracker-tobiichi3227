@@ -125,6 +125,7 @@ export default {
 .selects {
     display: flex;
     justify-content: flex-start;
+    box-sizing: border-box;
 }
 
 .selects > select {
@@ -136,11 +137,40 @@ export default {
     outline: none;
     cursor: pointer;
     appearance: auto !important;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+.visualize {
+    display: flex;
+    gap: 1em;
+    box-sizing: border-box;
 }
 
 .visualize > * {
     flex: 1 1 50%;
     box-sizing: border-box;
     padding: 1em;
+}
+
+@media (max-width: 768px) {
+    .selects {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .selects > select {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.8em;
+    }
+
+    .visualize {
+        flex-direction: column;
+    }
+
+    .visualize > * {
+        padding: 0.6em 0;
+    }
 }
 </style>
