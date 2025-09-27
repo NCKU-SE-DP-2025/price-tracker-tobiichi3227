@@ -111,4 +111,43 @@ export default {
     cursor: pointer;
     color: #888;
 }
+
+@media (max-width: 768px) {
+    .news-dialog {
+        width: 94%;
+        height: 88%;
+        padding: 1.2em 1.6em;
+    }
+    .content {
+        padding: 1em;
+    }
+    .news-dialog p {
+        font-size: 1.08em;
+        margin: 0.8em 0;
+    }
+}
+
+@media (max-width: 420px) {
+    .news-dialog {
+        width: 96%;
+        height: 88%;
+        padding: 0.8em 1em;
+        border-radius: 6px;
+    }
+    .content {
+        padding: 0.6em;
+    }
+    .news-dialog h2 {
+        font-size: 1.25em;
+    }
+    .news-dialog p {
+        font-size: 1.02em;
+        margin: 0.6em 0;
+    }
+    .close-btn {
+        top: 0.3em;
+        right: 0.3em;
+        font-size: 1.6em;
+    }
+}
 </style>

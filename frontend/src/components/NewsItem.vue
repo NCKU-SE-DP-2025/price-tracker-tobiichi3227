@@ -46,7 +46,7 @@ export default {
         news: {
             type: Object,
             required: true,
-        }
+        },
     },
     setup(props, { emit }) {
         const hasDetails = computed(() => {
@@ -67,7 +67,7 @@ export default {
         };
         const fetchSummary = () => {
             if (this.isLoading) return;
-            this.isLoading =  true;
+            this.isLoading = true;
             emit('fetch-summary');
         };
         const toggleUpvote = (newsId) => {
@@ -107,12 +107,26 @@ export default {
 
 .container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 0.75em;
+}
+
+.texts {
+    padding: 1em;
+    border-radius: 0.5em;
+    margin-right: 1em;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.texts:hover {
+    cursor: pointer;
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .summary-btn {
-    font-size: 2em;
+    font-size: 1.8em;
     display: none;
     cursor: pointer;
 }
@@ -125,43 +139,31 @@ export default {
     display: block;
 }
 
-.texts {
-    padding: 1em;
-    border-radius: 0.5em;
-    margin-right: 1em;
-    width: 100%;
-}
-
-.texts:hover {
-    cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.1);
-}
-
 .upvote-btn {
     display: flex;
-    align-items: center;
-    justify-content: center;
     color: white;
-    padding: 0.5em 2em;
+    padding: 0.35em 0.8em;
     border-radius: 1em;
-    width: 3em;
-    height: 3em;
+    width: auto;
+    height: auto;
+    flex: 0 0 auto;
+    background: transparent;
 }
 
 .upvote-btn span {
     margin-left: 0.25em;
-    font-size: 1.2em;
+    font-size: 1.05em;
     color: rgba(0, 0, 0, 0.5);
     font-weight: bold;
 }
 
 .upvote-btn:hover {
     cursor: pointer;
-    background-color: rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .upvote-btn > i {
-    font-size: 1.5em;
+    font-size: 1.2em;
     color: rgba(0, 0, 0, 0.5);
 }
 
@@ -185,6 +187,42 @@ export default {
 @keyframes l3 {
     to {
         transform: rotate(1turn);
+    }
+}
+
+@media (max-width: 420px) {
+    .container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .texts {
+        margin-right: 0;
+        padding: 0.8em;
+    }
+    .upvote-btn {
+        align-self: flex-end;
+        margin-top: 0.5em;
+    }
+    .news-item h2 {
+        font-size: 1.25em;
+    }
+    .news-item p {
+        font-size: 1em;
+    }
+    .summary-btn {
+        font-size: 1.4em;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        gap: 0.5em;
+    }
+    .texts {
+        padding: 0.9em;
+    }
+    .upvote-btn {
+        padding: 0.35em 0.6em;
     }
 }
 </style>

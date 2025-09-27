@@ -95,6 +95,8 @@ export default {
     height: calc(100% - 4.5em);
     box-sizing: border-box;
     width: 100%;
+    max-width: 1200px;
+    margin: 4.5em auto 0;
 }
 .content {
     background-color: white;
@@ -102,21 +104,52 @@ export default {
     border-radius: 1em;
     padding: 1em 3em;
 }
-.news-item {
-    border-bottom: #aaaaaa 1px solid;
+
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 1.2em 1em;
+    }
+
+    .content {
+        padding: 0.8em 1em;
+    }
+
+    .search-bar {
+        flex-direction: column;
+        padding: 0.6em;
+    }
+    .search-bar input {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.6em;
+    }
+    .search-bar i {
+        align-self: flex-end;
+    }
 }
-.news-item:last-child {
-    border-bottom: none;
+
+@media (max-width: 420px) {
+    .wrapper {
+        padding: 0.8em 0.6em;
+    }
+    .content {
+        padding: 0.6em 0.6em;
+    }
 }
+
 .search-bar {
     background-color: white;
-    display: inline-flex;
+    display: flex;
+    align-items: center;
     border-radius: 0.5em;
     box-sizing: border-box;
     text-align: start;
     margin-top: 1em;
     padding: 1em;
-    width: 80%;
+    width: 100%;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .search-bar input {
@@ -124,15 +157,14 @@ export default {
     outline: none;
     font-size: 0.9em;
     box-sizing: border-box;
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     margin-right: 1em;
+    width: 100%;
 }
 
 .search-bar i {
     cursor: pointer;
-}
-
-.search-bar button:hover {
-    cursor: pointer;
+    flex: 0 0 auto;
 }
 </style>
