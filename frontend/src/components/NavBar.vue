@@ -1,5 +1,5 @@
 <template>
-    <nav class="navbar">
+    <nav class="navbar" ref="navbar">
         <div class="title">
             <RouterLink to="/overview">價格追蹤小幫手</RouterLink>
         </div>
@@ -13,11 +13,11 @@
             </span>
         </button>
         <ul class="navbar-links" :class="{ active: isNavbarOpen }" id="navbar-links">
-            <li><RouterLink to="/overview">物價概覽</RouterLink></li>
-            <li><RouterLink to="/trending">物價趨勢</RouterLink></li>
-            <li><RouterLink to="/news">相關新聞</RouterLink></li>
+            <li><RouterLink to="/overview" @click="toggleNavbar">物價概覽</RouterLink></li>
+            <li><RouterLink to="/trending" @click="toggleNavbar">物價趨勢</RouterLink></li>
+            <li><RouterLink to="/news" @click="toggleNavbar">相關新聞</RouterLink></li>
             <li v-if="!isLoggedIn">
-                <RouterLink to="/login">登入</RouterLink>
+                <RouterLink to="/login" @click="toggleNavbar">登入</RouterLink>
             </li>
             <li v-else @click="logout">Hi, {{ getUserName }}! 登出</li>
         </ul>
@@ -25,10 +25,11 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useAuthStore } from '@/stores/auth';
 
 const isNavbarOpen = ref(false);
+const navbar = ref(null);
 const isLoggedIn = computed(() => {
     const userStore = useAuthStore();
     return userStore.isLoggedIn;
@@ -42,16 +43,36 @@ const getUserName = computed(() => {
 const logout = () => {
     const userStore = useAuthStore();
     userStore.logout();
+    toggleNavbar();
 };
 
 const toggleNavbar = () => {
     isNavbarOpen.value = !isNavbarOpen.value;
 };
 
+const handleClickOutside = (event) => {
+    if (navbar.value && !navbar.value.contains(event.target)) {
+        isNavbarOpen.value = false;
+    }
+};
+
+watch(isNavbarOpen, (newVal) => {
+    if (newVal) {
+        document.addEventListener('click', handleClickOutside);
+    } else {
+        document.removeEventListener('click', handleClickOutside);
+    }
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
+
 export default {
     name: 'NavBar',
     setup() {
         return {
+            navbar,
             isLoggedIn,
             getUserName,
             isNavbarOpen,
