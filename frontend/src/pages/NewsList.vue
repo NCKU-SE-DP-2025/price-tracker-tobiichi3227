@@ -2,14 +2,23 @@
     <div class="wrapper">
         <h1>相關新聞</h1>
         <div class="search-bar">
-            <input v-model="prompt" placeholder="輸入你的搜尋prompt，讓AI幫你找相關的新聞吧！例如：「我想獲取雞蛋價格的資訊」" class="search-input"/>
+            <input
+                v-model="prompt"
+                placeholder="輸入你的搜尋prompt，讓AI幫你找相關的新聞吧！例如：「我想獲取雞蛋價格的資訊」"
+                class="search-input"
+            />
             <i class="bi bi-search" @click="searchNewsBasedOnPrompt"></i>
         </div>
         <div class="content">
             <div v-if="isLoading">loading...</div>
             <div v-else>
-                <NewsItem v-for="(news, index) in newsList" :key="news.id" :news="news" 
-                    @show-dialog="showDialog(news)" @fetch-summary="fetchSummary(news.content, index)"/>
+                <NewsItem
+                    v-for="(news, index) in newsList"
+                    :key="news.id"
+                    :news="news"
+                    @show-dialog="showDialog(news)"
+                    @fetch-summary="fetchSummary(news.content, index)"
+                />
                 <div v-if="isEmpty">
                     <p>找不到相關新聞！</p>
                 </div>
@@ -21,54 +30,60 @@
 
 <script>
 import { useNewsStore } from '@/stores/news';
-import { onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import NewsItem from '@/components/NewsItem.vue';
 import NewsDialog from '@/components/NewsDialog.vue';
 
 export default {
     components: {
         NewsItem,
-        NewsDialog
+        NewsDialog,
     },
-    data() {
+    setup() {
+        const prompt = ref('');
+        const newsStore = useNewsStore();
+        const selectedNews = ref(null);
+        const isDialogVisible = ref(false);
+
+        const newsList = computed(() => {
+            return newsStore.getNews;
+        });
+        const isLoading = computed(() => {
+            return newsStore.isLoading;
+        });
+        const isEmpty = computed(() => {
+            return newsStore.newsList.length === 0;
+        });
+
+        const searchNewsBasedOnPrompt = () => {
+            if (prompt.value.trim()) {
+                newsStore.promptSearchNews(prompt.value);
+                prompt.value = '';
+            }
+        };
+        const showDialog = (news) => {
+            selectedNews.value = news;
+            isDialogVisible.value = true;
+        };
+        const fetchSummary = (content, index) => {
+            newsStore.fetchNewsSummary(content, index);
+        };
+        onMounted(() => {
+            newsStore.fetchNews();
+        });
         return {
-            prompt: '',
-            newsStore: useNewsStore(),
-            selectedNews: null,
-            isDialogVisible: false
+            prompt,
+            newsList,
+            isLoading,
+            isEmpty,
+            selectedNews,
+            isDialogVisible,
+            searchNewsBasedOnPrompt,
+            showDialog,
+            fetchSummary,
+            newsStore,
         };
     },
-    created() {
-        onMounted(() => {
-            this.newsStore.fetchNews();
-        });
-    },
-    computed: {
-        newsList() {
-            return this.newsStore.getNews;
-        },
-        isLoading() {
-            return this.newsStore.isLoading;
-        },
-        isEmpty() {
-            return this.newsStore.newsList.length === 0;
-        }
-    },
-    methods: {
-        searchNewsBasedOnPrompt() {
-            if (this.prompt.trim()) {
-                this.newsStore.promptSearchNews(this.prompt);
-                this.prompt = '';
-            }
-        },
-        showDialog(news) {
-            this.selectedNews = news;
-            this.isDialogVisible = true;
-        },
-        fetchSummary(content, index){
-            this.newsStore.fetchNewsSummary(content, index);
-        }
-    }
 };
 </script>
 
@@ -80,6 +95,8 @@ export default {
     height: calc(100% - 4.5em);
     box-sizing: border-box;
     width: 100%;
+    max-width: 1200px;
+    margin: 4.5em auto 0;
 }
 .content {
     background-color: white;
@@ -87,37 +104,67 @@ export default {
     border-radius: 1em;
     padding: 1em 3em;
 }
-.news-item{
-    border-bottom: #aaaaaa 1px solid;
+
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 1.2em 1em;
+    }
+
+    .content {
+        padding: 0.8em 1em;
+    }
+
+    .search-bar {
+        flex-direction: column;
+        padding: 0.6em;
+    }
+    .search-bar input {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 0.6em;
+    }
+    .search-bar i {
+        align-self: flex-end;
+    }
 }
-.news-item:last-child{
-    border-bottom: none;
+
+@media (max-width: 420px) {
+    .wrapper {
+        padding: 0.8em 0.6em;
+    }
+    .content {
+        padding: 0.6em 0.6em;
+    }
 }
-.search-bar{
+
+.search-bar {
     background-color: white;
-    display: inline-flex;
-    border-radius: .5em;
+    display: flex;
+    align-items: center;
+    border-radius: 0.5em;
     box-sizing: border-box;
     text-align: start;
     margin-top: 1em;
     padding: 1em;
-    width: 80%;
+    width: 100%;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.search-bar input{
+.search-bar input {
     border: none;
     outline: none;
-    font-size: .9em;
+    font-size: 0.9em;
     box-sizing: border-box;
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-width: 0;
     margin-right: 1em;
+    width: 100%;
 }
 
-.search-bar i{
+.search-bar i {
     cursor: pointer;
-}
-
-.search-bar button:hover{
-    cursor: pointer;
+    flex: 0 0 auto;
 }
 </style>

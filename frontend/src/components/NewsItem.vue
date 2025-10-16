@@ -1,6 +1,6 @@
 <template>
     <div class="news-item">
-        <div class="container" >
+        <div class="container">
             <div class="texts" @click="showDialog">
                 <h2>{{ news.title }}</h2>
                 <p class="time">{{ news.time }}</p>
@@ -12,52 +12,76 @@
                     <p>{{ shortContent }}</p>
                 </div>
             </div>
-            <i v-if="!hasDetails && !news.isSummaryLoading && isLoggedIn" class="bi bi-stars summary-btn" @click="fetchSummary"></i>
-            <div v-if="!hasDetails && news.isSummaryLoading && isLoggedIn" class="loader"></div>
+            <i
+                v-if="!hasDetails && !news.isSummaryLoading && isLoggedIn"
+                class="bi bi-stars summary-btn"
+                @click="fetchSummary"
+            ></i>
+            <div
+                v-if="!hasDetails && news.isSummaryLoading && isLoggedIn"
+                class="loader"
+            ></div>
         </div>
-        <div class="upvote-btn" @click="toggleUpvote(news.id)" v-if="'upvotes' in news">
-            <i class="bi bi-fire" :class="{'fire-upvoted': news.is_upvoted}"></i>
+        <div
+            class="upvote-btn"
+            @click="toggleUpvote(news.id)"
+            v-if="'upvotes' in news"
+        >
+            <i
+                class="bi bi-fire"
+                :class="{ 'fire-upvoted': news.is_upvoted }"
+            ></i>
             <span>{{ news.upvotes }}</span>
         </div>
-
     </div>
 </template>
 
 <script>
-import { useAuthStore } from '@/stores/auth';
+import { computed } from 'vue';
 import { useNewsStore } from '@/stores/news';
+import { useAuthStore } from '@/stores/auth';
+
 export default {
     props: {
         news: {
             type: Object,
-            required: true
-        }
+            required: true,
+        },
     },
-    computed: {
-        hasDetails() {
-            return this.news.reason && this.news.summary;
-        },
-        shortContent() {
-            return this.news.content.length > 200 ? this.news.content.substr(0, 200) + '...' : this.news.content;
-        },
-        isLoggedIn(){
+    setup(props, { emit }) {
+        const hasDetails = computed(() => {
+            return props.news.reason && props.news.summary;
+        });
+        const shortContent = computed(() => {
+            return props.news.content.length > 200
+                ? props.news.content.substr(0, 200) + '...'
+                : props.news.content;
+        });
+        const isLoggedIn = computed(() => {
             const userStore = useAuthStore();
             return userStore.isLoggedIn;
-        }
-    },
-    methods:{
-        showDialog(){
-            this.$emit('show-dialog');
-        },
-        fetchSummary(){
-            if(this.isLoading) return;
+        });
+
+        const showDialog = () => {
+            emit('show-dialog');
+        };
+        const fetchSummary = () => {
+            if (this.isLoading) return;
             this.isLoading = true;
-            this.$emit('fetch-summary');
-        },
-        toggleUpvote(newsId){
+            emit('fetch-summary');
+        };
+        const toggleUpvote = (newsId) => {
             useNewsStore().toggleUpvote(newsId);
-        }
-    }
+        };
+        return {
+            hasDetails,
+            shortContent,
+            isLoggedIn,
+            showDialog,
+            fetchSummary,
+            toggleUpvote,
+        };
+    },
 };
 </script>
 
@@ -72,7 +96,7 @@ export default {
 }
 
 .news-item p {
-    margin: .5em 0;
+    margin: 0.5em 0;
     text-align: start;
     font-size: 1.1em;
 }
@@ -81,84 +105,124 @@ export default {
     color: #888;
 }
 
-.container{
+.container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
+    gap: 0.75em;
 }
 
-.summary-btn{
-    font-size: 2em;
-    display: none;
-    cursor: pointer;
-}
-
-.summary-btn:hover{
-    color: #f0ad4e;
-}
-
-.news-item:hover .summary-btn{
-    display: block;
-}
-
-.texts{
+.texts {
     padding: 1em;
-    border-radius: .5em;
+    border-radius: 0.5em;
     margin-right: 1em;
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
-.texts:hover{
+.texts:hover {
     cursor: pointer;
     background-color: rgba(0, 0, 0, 0.1);
 }
 
-.upvote-btn{
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    padding: .5em 2em;
-    border-radius: 1em;
-    width: 3em;
-    height: 3em;
+.summary-btn {
+    font-size: 1.8em;
+    display: none;
+    cursor: pointer;
 }
 
-.upvote-btn span{
-    margin-left: .25em;
-    font-size: 1.2em;
-    color: rgba(0,0,0,0.5);
+.summary-btn:hover {
+    color: #f0ad4e;
+}
+
+.news-item:hover .summary-btn {
+    display: block;
+}
+
+.upvote-btn {
+    display: flex;
+    color: white;
+    padding: 0.35em 0.8em;
+    border-radius: 1em;
+    width: auto;
+    height: auto;
+    flex: 0 0 auto;
+    background: transparent;
+}
+
+.upvote-btn span {
+    margin-left: 0.25em;
+    font-size: 1.05em;
+    color: rgba(0, 0, 0, 0.5);
     font-weight: bold;
 }
 
-.upvote-btn:hover{
+.upvote-btn:hover {
     cursor: pointer;
-    background-color: rgba(0,0,0,0.1);
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
-.upvote-btn > i{
-    font-size: 1.5em;
-    color: rgba(0,0,0,0.5);
+.upvote-btn > i {
+    font-size: 1.2em;
+    color: rgba(0, 0, 0, 0.5);
 }
 
-.fire-upvoted{
+.fire-upvoted {
     color: #f6620c !important;
 }
 
 .loader {
-  width: 30px;
-  padding: 8px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #20A7E8;
-  --_m: 
-    conic-gradient(#0000 10%,#000),
-    linear-gradient(#000 0 0) content-box;
-  -webkit-mask: var(--_m);
-          mask: var(--_m);
-  -webkit-mask-composite: source-out;
-          mask-composite: subtract;
-  animation: l3 1s infinite linear;
+    width: 30px;
+    padding: 8px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: #20a7e8;
+    --_m: conic-gradient(#0000 10%, #000), linear-gradient(#000 0 0) content-box;
+    -webkit-mask: var(--_m);
+    mask: var(--_m);
+    -webkit-mask-composite: source-out;
+    mask-composite: subtract;
+    animation: l3 1s infinite linear;
 }
-@keyframes l3 {to{transform: rotate(1turn)}}
+@keyframes l3 {
+    to {
+        transform: rotate(1turn);
+    }
+}
+
+@media (max-width: 420px) {
+    .container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .texts {
+        margin-right: 0;
+        padding: 0.8em;
+    }
+    .upvote-btn {
+        align-self: flex-end;
+        margin-top: 0.5em;
+    }
+    .news-item h2 {
+        font-size: 1.25em;
+    }
+    .news-item p {
+        font-size: 1em;
+    }
+    .summary-btn {
+        font-size: 1.4em;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        gap: 0.5em;
+    }
+    .texts {
+        padding: 0.9em;
+    }
+    .upvote-btn {
+        padding: 0.35em 0.6em;
+    }
+}
 </style>

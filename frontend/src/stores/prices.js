@@ -8,9 +8,9 @@ export const usePricesStore = defineStore('prices', {
             categories: {},
             isLoading: false,
             errorMessage: '',
-            updatedTime: null
+            updatedTime: null,
         };
-        Object.keys(Categories).forEach(category => {
+        Object.keys(Categories).forEach((category) => {
             initialState.categories[category] = [];
         });
         return initialState;
@@ -19,32 +19,38 @@ export const usePricesStore = defineStore('prices', {
         async fetchPrices() {
             this.isLoading = true;
             this.errorMessage = '';
-            Object.keys(Categories).forEach(category => {
+            Object.keys(Categories).forEach((category) => {
                 this.categories[category] = [];
             });
             try {
-                const response = await axios.get('http://localhost:8000/api/v1/prices/necessities-price');
+                const response = await axios.get(
+                    'http://localhost:8000/api/v1/prices/necessities-price'
+                );
                 let data = response.data;
 
-
-                data.forEach(item => {
+                data.forEach((item) => {
                     const categoryKey = Object.keys(Categories).find(
-                        key => Categories[key] === item.類別
+                        (key) => Categories[key] === item.類別
                     );
                     if (categoryKey) {
                         this.categories[categoryKey].push(item);
                     }
                 });
                 this.updatedTime = new Date();
-                this.updatedTime = this.updatedTime.toLocaleString('zh-TW', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                }).replace(/(\d{4})\/(\d{2})\/(\d{2}), (\d{2}):(\d{2}):(\d{2})/, "$1/$2/$3 $4:$5");
+                this.updatedTime = this.updatedTime
+                    .toLocaleString('zh-TW', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false,
+                    })
+                    .replace(
+                        /(\d{4})\/(\d{2})\/(\d{2}), (\d{2}):(\d{2}):(\d{2})/,
+                        '$1/$2/$3 $4:$5'
+                    );
             } catch (error) {
                 this.errorMessage = 'Error fetching prices: ' + error.message;
             } finally {
@@ -60,7 +66,7 @@ export const usePricesStore = defineStore('prices', {
             return state.categories;
         },
         getProductList: (state) => (category) => {
-            return state.categories[category].map(item => item.產品名稱);
+            return state.categories[category].map((item) => item.產品名稱);
         },
-    }
+    },
 });
