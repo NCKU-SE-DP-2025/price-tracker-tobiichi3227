@@ -70,7 +70,8 @@ def test_get_necessities_prices_with_query(mock_get, mock_necessities_data):
 # def test_get_necessities_prices_error_handling(mock_get):
 #     mock_response = mock_get.return_value
 #     mock_response.status_code = 400
-#     mock_response.raise_for_status.side_effect = requests.RequestException("Error fetching data")
+#     mock_response.raise_for_status.side_effect =
+#     requests.RequestException("Error fetching data")
 
 #     response = client.get("/api/v1/prices/necessities-price")
 
