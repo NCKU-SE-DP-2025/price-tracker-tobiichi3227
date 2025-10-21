@@ -1,24 +1,30 @@
+import itertools
 import json
+from datetime import datetime, timedelta
+
+import requests
 import sentry_sdk
 from apscheduler.schedulers.background import BackgroundScheduler
+from fastapi import Depends, FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-import itertools
-from sqlalchemy import delete, insert, select
-from sqlalchemy.orm import Session, sessionmaker
-from typing import List, Optional
-import requests
-from fastapi import APIRouter, HTTPException, Query, Depends, status, FastAPI
-import os
-from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
+from jose import jwt
 from passlib.context import CryptContext
-
-from pydantic import BaseModel, Field, AnyHttpUrl
-from sqlalchemy import (Column, ForeignKey, Integer, String, Table, Text,
-                        create_engine)
+from pydantic import BaseModel
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    Text,
+    create_engine,
+    delete,
+    insert,
+    select,
+)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import Session, relationship, sessionmaker
 
 Base = declarative_base()
 
@@ -85,10 +91,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-import os
-from openai import OpenAI
-
-
 # def generate_summary(content):
 #     m = [
 #         {
@@ -103,7 +105,6 @@ from openai import OpenAI
 #         messages=m,
 #     )
 #     return completion.choices[0].message.content
-
 #
 # def extract_search_keywords(content):
 #     m = [
@@ -119,11 +120,10 @@ from openai import OpenAI
 #         messages=m,
 #     )
 #     return completion.choices[0].message.content
-
-
 from urllib.parse import quote
-import requests
+
 from bs4 import BeautifulSoup
+from openai import OpenAI
 from sqlalchemy.orm import Session
 
 
@@ -134,14 +134,16 @@ def add_new(news_data):
     :return:
     """
     session = Session()
-    session.add(NewsArticle(
-        url=news_data["url"],
-        title=news_data["title"],
-        time=news_data["time"],
-        content=" ".join(news_data["content"]),  # 將內容list轉換為字串
-        summary=news_data["summary"],
-        reason=news_data["reason"],
-    ))
+    session.add(
+        NewsArticle(
+            url=news_data["url"],
+            title=news_data["title"],
+            time=news_data["time"],
+            content=" ".join(news_data["content"]),  # 將內容list轉換為字串
+            summary=news_data["summary"],
+            reason=news_data["reason"],
+        )
+    )
     session.commit()
     session.close()
 
@@ -182,6 +184,7 @@ def get_new_info(search_term, is_initial=False):
         all_news_data = response.json()["lists"]
     return all_news_data
 
+
 def get_new(is_initial=False):
     """
     get new info
@@ -218,7 +221,7 @@ def get_new(is_initial=False):
                 for p in content_section.find_all("p")
                 if p.text.strip() != "" and "▪" not in p.text
             ]
-            detailed_news =  {
+            detailed_news = {
                 "url": news["titleLink"],
                 "title": title,
                 "time": time,
@@ -271,7 +274,6 @@ def session_opener():
         session.close()
 
 
-
 def verify(p1, p2):
     return pwd_context.verify(p1, p2)
 
@@ -283,11 +285,8 @@ def check_user_password_is_correct(db, n, pwd):
     return OuO
 
 
-def authenticate_user_token(
-    token = Depends(oauth2_scheme),
-    db = Depends(session_opener)
-):
-    payload = jwt.decode(token, '1892dhianiandowqd0n', algorithms=["HS256"])
+def authenticate_user_token(token=Depends(oauth2_scheme), db=Depends(session_opener)):
+    payload = jwt.decode(token, "1892dhianiandowqd0n", algorithms=["HS256"])
     return db.query(User).filter(User.username == payload.get("sub")).first()
 
 
@@ -300,13 +299,14 @@ def create_access_token(data, expires_delta=None):
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     print(to_encode)
-    encoded_jwt = jwt.encode(to_encode, '1892dhianiandowqd0n', algorithm="HS256")
+    encoded_jwt = jwt.encode(to_encode, "1892dhianiandowqd0n", algorithm="HS256")
     return encoded_jwt
 
 
 @app.post("/api/v1/users/login")
 async def login_for_access_token(
-        form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(session_opener)
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(session_opener),
 ):
     """login"""
     user = check_user_password_is_correct(db, form_data.username, form_data.password)
@@ -315,9 +315,12 @@ async def login_for_access_token(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 class UserAuthSchema(BaseModel):
     username: str
     password: str
+
+
 @app.post("/api/v1/users/register")
 def create_user(user: UserAuthSchema, db: Session = Depends(session_opener)):
     """create user"""
@@ -346,10 +349,10 @@ def get_article_upvote_details(article_id, uid, db):
     voted = False
     if uid:
         voted = (
-                db.query(user_news_association_table)
-                .filter_by(news_articles_id=article_id, user_id=uid)
-                .first()
-                is not None
+            db.query(user_news_association_table)
+            .filter_by(news_articles_id=article_id, user_id=uid)
+            .first()
+            is not None
         )
     return cnt, voted
 
@@ -366,19 +369,12 @@ def read_news(db=Depends(session_opener)):
     result = []
     for n in news:
         upvotes, upvoted = get_article_upvote_details(n.id, None, db)
-        result.append(
-            {**n.__dict__, "upvotes": upvotes, "is_upvoted": upvoted}
-        )
+        result.append({**n.__dict__, "upvotes": upvotes, "is_upvoted": upvoted})
     return result
 
 
-@app.get(
-    "/api/v1/news/user_news"
-)
-def read_user_news(
-        db=Depends(session_opener),
-        u=Depends(authenticate_user_token)
-):
+@app.get("/api/v1/news/user_news")
+def read_user_news(db=Depends(session_opener), u=Depends(authenticate_user_token)):
     """
     read user new
 
@@ -399,8 +395,10 @@ def read_user_news(
         )
     return result
 
+
 class PromptRequest(BaseModel):
     prompt: str
+
 
 @app.post("/api/v1/news/search_news")
 async def search_news(request: PromptRequest):
@@ -449,12 +447,14 @@ async def search_news(request: PromptRequest):
             print(e)
     return sorted(news_list, key=lambda x: x["time"], reverse=True)
 
+
 class NewsSumaryRequestSchema(BaseModel):
     content: str
 
+
 @app.post("/api/v1/news/news_summary")
 async def news_summary(
-        payload: NewsSumaryRequestSchema, u=Depends(authenticate_user_token)
+    payload: NewsSumaryRequestSchema, u=Depends(authenticate_user_token)
 ):
     response = {}
     m = [
@@ -479,9 +479,9 @@ async def news_summary(
 
 @app.post("/api/v1/news/{id}/upvote")
 def upvote_article(
-        id,
-        db=Depends(session_opener),
-        u=Depends(authenticate_user_token),
+    id,
+    db=Depends(session_opener),
+    u=Depends(authenticate_user_token),
 ):
     message = toggle_upvote(id, u.id, db)
     return {"message": message}
@@ -517,9 +517,7 @@ def news_exists(id2, db: Session):
 
 
 @app.get("/api/v1/prices/necessities-price")
-def get_necessities_prices(
-        category=Query(None), commodity=Query(None)
-):
+def get_necessities_prices(category=Query(None), commodity=Query(None)):
     return requests.get(
         "https://opendata.ey.gov.tw/api/ConsumerProtection/NecessitiesPrice",
         params={"CategoryName": category, "Name": commodity},
