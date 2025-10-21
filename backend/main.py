@@ -145,11 +145,11 @@ app.add_middleware(
 #     return completion.choices[0].message.content
 
 
-def add_new(news_data):
+def add_news_article(news_data):
     """
-    Add news to database.
+    Add news article to database.
 
-    :param news_data: news info
+    :param news_data: news article info
     :return: None
     """
     session = SessionLocal()
@@ -169,13 +169,13 @@ def add_new(news_data):
         session.close()
 
 
-def get_new_info(search_term, is_initial=False):
+def fetch_raw_news(search_term, is_initial=False):
     """
-    Get news information.
+    Fetch raw news from external API.
 
     :param search_term: search term
     :param is_initial: whether it's initial fetch
-    :return: list of news
+    :return: list of raw news data
     """
     all_news_data = []
     if is_initial:
@@ -204,14 +204,14 @@ def get_new_info(search_term, is_initial=False):
     return all_news_data
 
 
-def get_new(is_initial=False):
+def process_and_save_news(is_initial=False):
     """
-    Get new articles and process them.
+    Process raw news articles and save relevant ones to database.
 
     :param is_initial: whether it's initial fetch
     :return: None
     """
-    news_data = get_new_info("價格", is_initial=is_initial)
+    news_data = fetch_raw_news("價格", is_initial=is_initial)
     for news in news_data:
         title = news["title"]
         messages = [
@@ -269,17 +269,16 @@ def get_new(is_initial=False):
             result = json.loads(result)
             detailed_news["summary"] = result["影響"]
             detailed_news["reason"] = result["原因"]
-            add_new(detailed_news)
+            add_news_article(detailed_news)
 
 
 @app.on_event("startup")
 def start_scheduler():
     db = SessionLocal()
     if db.query(NewsArticle).count() == 0:
-        # should change into simple factory pattern
-        get_new()
+        process_and_save_news()
     db.close()
-    bgs.add_job(get_new, "interval", minutes=100)
+    bgs.add_job(process_and_save_news, "interval", minutes=100)
     bgs.start()
 
 
@@ -306,8 +305,15 @@ def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
 
-def check_user_password_is_correct(db: Session, username: str, password: str):
-    """Check if user password is correct."""
+def authenticate_user(db: Session, username: str, password: str):
+    """
+    Authenticate user by username and password.
+
+    :param db: database session
+    :param username: user's username
+    :param password: user's plain password
+    :return: User object if valid, None otherwise
+    """
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
         return None
@@ -350,7 +356,7 @@ async def login_for_access_token(
     db: Session = Depends(get_db),
 ):
     """Login endpoint."""
-    user = check_user_password_is_correct(db, form_data.username, form_data.password)
+    user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(status_code=401, detail="Incorrect username or password")
     access_token = create_access_token(
@@ -376,11 +382,11 @@ def create_user(user: UserAuthSchema, db: Session = Depends(get_db)):
 
 
 @app.get("/api/v1/users/me")
-def read_users_me(
+def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
 ):
-    """Get current user info."""
+    """Get current authenticated user info."""
     user = authenticate_user_token(token, db)
     return {"username": user.username}
 
@@ -388,36 +394,48 @@ def read_users_me(
 _id_counter = itertools.count(start=1000000)
 
 
-def get_article_upvote_details(article_id, uid, db):
-    cnt = (
+def get_article_upvote_details(
+    article_id: int, user_id: int | None, db: Session
+) -> tuple[int, bool]:
+    """
+    Get article upvote count and whether user has upvoted it.
+
+    :param article_id: ID of the news article
+    :param user_id: ID of the user (None if not authenticated)
+    :param db: database session
+    :return: tuple of (upvote_count, is_upvoted_by_user)
+    """
+    upvote_cnt = (
         db.query(user_news_association_table)
         .filter_by(news_articles_id=article_id)
         .count()
     )
     voted = False
-    if uid:
+    if user_id:
         voted = (
             db.query(user_news_association_table)
-            .filter_by(news_articles_id=article_id, user_id=uid)
+            .filter_by(news_articles_id=article_id, user_id=user_id)
             .first()
             is not None
         )
-    return cnt, voted
+    return upvote_cnt, voted
 
 
 @app.get("/api/v1/news/news")
-def read_news(db: Session = Depends(get_db)):
+def get_news_articles(db: Session = Depends(get_db)):
     """
-    Read all news articles.
+    Get all news articles with upvote counts.
 
     :param db: database session
-    :return: list of news articles
+    :return: list of news articles with upvote information
     """
     news = db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
     result = []
     for article in news:
-        upvotes, upvoted = get_article_upvote_details(article.id, None, db)
-        result.append({**article.__dict__, "upvotes": upvotes, "is_upvoted": upvoted})
+        upvote_cnt, upvoted = get_article_upvote_details(article.id, None, db)
+        result.append(
+            {**article.__dict__, "upvotes": upvote_cnt, "is_upvoted": upvoted}
+        )
     return result
 
 
@@ -476,7 +494,7 @@ async def search_news(request: PromptRequest):
         messages=messages,
     )
     keywords = completion.choices[0].message.content
-    news_items = get_new_info(keywords, is_initial=False)
+    news_items = fetch_raw_news(keywords, is_initial=False)
     for news in news_items:
         try:
             response = requests.get(news["titleLink"])
