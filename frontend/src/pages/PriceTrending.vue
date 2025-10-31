@@ -3,7 +3,7 @@
         <h1>物價趨勢</h1>
         <div class="content">
             <div class="selects">
-                <select v-model="selectedCategory">
+                <select v-model="prices.selectedCategory">
                     <option disabled value="">請選擇商品類別</option>
                     <option
                         v-for="category in categoryKeys"
@@ -13,7 +13,7 @@
                         {{ categoryName(category) }}
                     </option>
                 </select>
-                <select v-model="selectedProduct">
+                <select v-model="prices.selectedProduct">
                     <option disabled value="">請選擇商品</option>
                     <option
                         v-for="product in products"
@@ -24,14 +24,14 @@
                     </option>
                 </select>
             </div>
-            <div v-if="selectedProduct" class="visualize">
+            <div v-if="prices.selectedProduct" class="visualize">
                 <TrendingChart
-                    v-if="selectedProduct"
-                    :data="selectedProduct"
+                    v-if="prices.selectedProduct"
+                    :data="prices.selectedProduct"
                 ></TrendingChart>
                 <TrendingTable
-                    v-if="selectedProduct"
-                    :data="selectedProduct"
+                    v-if="prices.selectedProduct"
+                    :data="prices.selectedProduct"
                 ></TrendingTable>
             </div>
         </div>
