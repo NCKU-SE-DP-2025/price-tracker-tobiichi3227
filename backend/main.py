@@ -693,7 +693,6 @@ def shutdown_event():
 
 
 auth_router = APIRouter(prefix="/api/v1/users")
-app.include_router(auth_router)
 
 
 @auth_router.post("/register")
@@ -729,8 +728,10 @@ def get_me(current_user: User = Depends(get_current_user)):
     return UserResponse.from_orm(current_user)
 
 
+app.include_router(auth_router)
+
+
 news_router = APIRouter(prefix="/api/v1/news")
-app.include_router(news_router)
 
 
 @news_router.get("/news", response_model=list[NewsArticleResponse])
@@ -799,8 +800,10 @@ async def upvote_news(
         return {"message": "Upvote removed"}
 
 
+app.include_router(news_router)
+
+
 price_router = APIRouter(prefix="/api/v1/prices")
-app.include_router(price_router)
 
 
 @price_router.get("/necessities-price")
@@ -809,3 +812,6 @@ async def get_necessities_prices(
 ):
     prices = await price_service.fetch_all_prices()
     return prices
+
+
+app.include_router(price_router)
