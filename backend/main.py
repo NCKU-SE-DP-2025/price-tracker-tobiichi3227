@@ -1,11 +1,8 @@
-import asyncio
 import json
 import logging
 import os
 from collections.abc import Generator
 from datetime import datetime, timedelta
-from enum import IntEnum, auto
-from functools import partial
 from urllib.parse import quote
 
 import requests
@@ -377,223 +374,21 @@ class NewsService:
         return sorted(results, key=lambda x: x["time"], reverse=True)
 
 
-class CategoryKey(IntEnum):
-    MILK = auto()
-    POWDER = auto()
-    RICE = auto()
-    EGG = auto()
-    OIL = auto()
-    TISSUE = auto()
-    SAUCE = auto()
-    BODY_WASH = auto()
-    SHAMPOO = auto()
-    SOAP = auto()
-    DETERGENT = auto()
-    INSTANT_NOODLES = auto()
-    FLOUR = auto()
-    TOOTHPASTE = auto()
-    SUGAR = auto()
-
-
-categories = {
-    CategoryKey.MILK: "鮮乳",
-    CategoryKey.POWDER: "奶粉",
-    CategoryKey.RICE: "米",
-    CategoryKey.EGG: "雞蛋",
-    CategoryKey.OIL: "食用油",
-    CategoryKey.TISSUE: "衛生紙",
-    CategoryKey.SAUCE: "醬油",
-    CategoryKey.BODY_WASH: "沐浴乳",
-    CategoryKey.SHAMPOO: "洗髮精",
-    CategoryKey.SOAP: "香皂",
-    CategoryKey.DETERGENT: "洗衣粉",
-    CategoryKey.INSTANT_NOODLES: "泡麵",
-    CategoryKey.FLOUR: "麵粉",
-    CategoryKey.TOOTHPASTE: "牙膏",
-    CategoryKey.SUGAR: "糖",
-}
-
-commodities = {
-    CategoryKey.MILK: {
-        "統一瑞穗高優質鮮乳",
-        "味全林鳳營鮮乳",
-        "光泉鮮乳",
-        "光泉乳香世家",
-        "福樂一番鮮鮮乳",
-    },
-    CategoryKey.POWDER: {
-        "豐力富全家人營養調製奶粉",
-        "安怡長青高鈣奶粉",
-        "桂格維他命高鈣奶粉",
-        "桂格高鐵高鈣奶粉(膠原蛋白配方)",
-        # "克寧即溶奶粉",
-        "優生A+育嬰配方奶粉",
-        "豐力富Nature幼兒成長奶粉（1-3歲）",
-        "S-26金愛兒樂奶粉(0-12月)",
-        "S-26金幼兒樂奶粉（1-3歲）",
-        "亞培心美力3成長奶粉(1-3歲)",
-        "亞培心美力1嬰兒奶粉(0-12個月)",
-        "味全果汁奶粉(優鈣多配方)",
-    },
-    CategoryKey.RICE: {
-        "中興世界頂級香米",
-        "中興外銷日本的米",
-        "三好尊爵皇家香米",
-        "三好池鮮米",
-        "天生好米黃金比例",
-        "三好台梗九號米",
-        # "中興東部米",
-        "三好皇家香米(15℃系列)",
-    },
-    CategoryKey.EGG: {
-        "義進洗選蛋",
-        "泰安寶貝紅蛋",
-        # "特選白鮮蛋",
-        # "冠軍蛋"
-    },
-    CategoryKey.OIL: {
-        # "得意的一天葵花油",
-        # "泰山不飽和健康調合油",
-        # "泰山OMEGA3芥花不飽和健康調合油",
-        "台糖大豆沙拉油",
-        # "統一清爽家芥花油",
-    },
-    CategoryKey.TISSUE: {
-        "得意抽取式衛生紙",
-        "柔情抽取式衛生紙",
-        "春風平版衛生紙",
-        "舒潔平版衛生紙",
-        "舒潔威象家用紙巾",
-        "五月花盒裝面紙",
-    },
-    CategoryKey.SAUCE: {
-        "龜甲萬甘醇醬油",
-        "金蘭甘醇醬油",
-        "金蘭醬油",
-        "萬家香陳年醬油",
-        "萬家香香菇素蠔油",
-        "統一四季釀造醬油",
-    },
-    CategoryKey.BODY_WASH: {
-        "嬌生PH5.5沐浴乳",
-        "澎澎香浴乳(亮澤滋潤型)",
-        # "花王沐浴香皂露(滋潤柔滑型)",
-        "Biore淨嫩沐浴乳(浪漫保濕型)",
-    },
-    CategoryKey.SHAMPOO: {
-        "Dove去屑護理洗髮乳",
-        "海倫仙度絲去屑洗髮乳(海洋活力)",
-        "麗仕柔亮絲滑洗髮乳",
-        "飛柔洗髮乳(去頭皮屑熱油)",
-        "潘婷洗髮乳(絲質順滑)",
-    },
-    CategoryKey.SOAP: {
-        "麗仕香皂",
-        "彎彎浴皂",
-        "多芬柔嫩潔膚塊",
-    },
-    CategoryKey.DETERGENT: {
-        # "白蘭強效洗衣粉",
-        "白蘭強效潔淨洗衣精",
-        "白蘭強效潔淨洗衣粉補充包",
-        "一匙靈亮彩洗衣精",
-        "一匙靈亮彩洗衣粉",
-        "加倍潔防螨潔白超濃縮洗衣粉",
-    },
-    CategoryKey.INSTANT_NOODLES: {
-        "維力炸醬麵",
-        "統一肉燥麵",
-        "味味麵",
-        "味味一品原汁珍味牛肉麵",
-    },
-    CategoryKey.FLOUR: {
-        "日正高筋麵粉",
-        "義峰高筋麵粉",
-    },
-    CategoryKey.TOOTHPASTE: {
-        "黑人超氟牙膏",
-        "高露潔全效牙膏(專業美白)",
-        "舒酸定長效抗敏牙膏(牙齦護理)",
-        "白人牙膏家庭號",
-        "德恩奈超氟牙膏",
-        # "白人牙膏",
-    },
-    CategoryKey.SUGAR: {
-        # "台糖細粒特砂",
-        "台糖精製細砂",
-        "台糖貳號砂糖",
-        "台糖精製特砂",
-    },
-}
-
-
 class PriceService:
     PRICE_API_URL = "https://opendata.ey.gov.tw/api/ConsumerProtection/NecessitiesPrice"
     TIMEOUT = 45
 
-    def __init__(self, categories: dict, commodities: dict):
-        self.categories = categories
-        self.commodities = commodities
-
-    async def fetch_all_prices(self) -> list[dict]:
-        loop = asyncio.get_running_loop()
-        tasks = []
-
-        for category_key, category_name in self.categories.items():
-            for commodity_name in self.commodities[category_key]:
-                params = {"CategoryName": category_name, "Name": commodity_name}
-                func = partial(
-                    requests.get,
-                    self.PRICE_API_URL,
-                    params=params,
-                    timeout=self.TIMEOUT,
-                )
-                tasks.append(
-                    (category_name, commodity_name, loop.run_in_executor(None, func))
-                )
-
-        results = await asyncio.gather(
-            *[task[2] for task in tasks], return_exceptions=True
-        )
-
-        prices = []
-        for (category_name, commodity_name, _), response in zip(
-            tasks, results, strict=False
-        ):
-            price = self._process_response(category_name, commodity_name, response)
-            if price:
-                prices.append(price)
-
-        return prices
-
-    def _process_response(self, category: str, commodity: str, response) -> dict | None:
-        if isinstance(response, Exception):
-            logging.error(
-                f"Error fetching price for {category}-{commodity}: {response}"
-            )
-            return None
-
-        try:
-            if response.status_code != 200:
-                logging.error(
-                    "Non-200 response for {category}-{commodity}:"
-                    f" {response.status_code}"
-                )
-                return None
-
-            data = response.json()
-            if isinstance(data, list) and data:
-                return data[0]
-
-            return None
-        except Exception as e:
-            logging.error(f"Error processing response for {category}-{commodity}: {e}")
-            return None
+    def fetch_all_prices(self) -> list[dict]:
+        return requests.get(
+            self.PRICE_API_URL,
+            params={"CategoryName": "'*'", "Name": "'*'"},
+            timeout=self.TIMEOUT,
+        ).json()
 
 
 auth_service = AuthService()
 ai_service = AIService()
-price_service = PriceService(categories, commodities)
+price_service = PriceService()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
 
@@ -810,7 +605,7 @@ price_router = APIRouter(prefix="/api/v1/prices")
 async def get_necessities_prices(
     price_service: PriceService = Depends(get_price_service_dep),
 ):
-    prices = await price_service.fetch_all_prices()
+    prices = price_service.fetch_all_prices()
     return prices
 
 
