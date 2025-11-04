@@ -1,3 +1,4 @@
+import itertools
 import json
 import logging
 import os
@@ -287,6 +288,7 @@ class NewsService:
     def __init__(self, db: Session, ai_service: AIService) -> None:
         self.repo = NewsRepository(db)
         self.ai_service = ai_service
+        self._id_counter = itertools.count(start=1000000)
 
     def fetch_and_process_news(
         self, search_term: str, is_initial: bool = False
@@ -353,6 +355,7 @@ class NewsService:
                 "title": title,
                 "time": time,
                 "content": "".join(paragraphs),  # NOTE: this is ok
+                "id": next(self._id_counter),
             }
 
         except Exception as e:
