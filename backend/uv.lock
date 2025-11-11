@@ -99,6 +99,7 @@ dependencies = [
     { name = "pyasn1" },
     { name = "pydantic" },
     { name = "pydantic-core" },
+    { name = "pydantic-settings" },
     { name = "pygments" },
     { name = "pytest" },
     { name = "pytest-mock" },
@@ -175,6 +176,7 @@ requires-dist = [
     { name = "pyasn1", specifier = "==0.6.0" },
     { name = "pydantic", specifier = "==2.7.4" },
     { name = "pydantic-core", specifier = "==2.18.4" },
+    { name = "pydantic-settings", specifier = "==2.3.4" },
     { name = "pygments", specifier = "==2.18.0" },
     { name = "pytest", specifier = "==8.2.2" },
     { name = "pytest-mock", specifier = "==3.14.0" },
@@ -853,6 +855,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/c3/3f/9669fd933f5e344e811193438ba688f7abe0c64beddd8ee52fa53dad68d0/pydantic_core-2.18.4-pp310-pypy310_pp73-musllinux_1_1_aarch64.whl", hash = "sha256:578e24f761f3b425834f297b9935e1ce2e30f51400964ce4801002435a1b41ef", size = 2006230, upload-time = "2024-06-03T17:47:25.804Z" },
     { url = "https://files.pythonhosted.org/packages/b0/8a/c8a2e60482eebc5c878faf7067e63ef532d40b01870292a7da40506b2d5f/pydantic_core-2.18.4-pp310-pypy310_pp73-musllinux_1_1_x86_64.whl", hash = "sha256:81b5efb2f126454586d0f40c4d834010979cb80785173d1586df845a632e4e6d", size = 2109883, upload-time = "2024-06-03T17:47:28.84Z" },
     { url = "https://files.pythonhosted.org/packages/f5/6e/b753bb42bc8aff4fd34c6816f2a17e5e059217512e224a2aa31a1b2f8f93/pydantic_core-2.18.4-pp310-pypy310_pp73-win_amd64.whl", hash = "sha256:ab86ce7c8f9bea87b9d12c7f0af71102acbf5ecbc66c17796cff45dae54ef9a5", size = 1917020, upload-time = "2024-06-03T17:47:31.227Z" },
+]
+
+[[package]]
+name = "pydantic-settings"
+version = "2.3.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d9/11/fd8ae4050bc80b7d00a4396fb0c1c5acd6a7eabb3a9a38f653f7f16f6bd0/pydantic_settings-2.3.4.tar.gz", hash = "sha256:c5802e3d62b78e82522319bbc9b8f8ffb28ad1c988a99311d04f2a6051fca0a7", size = 59231, upload-time = "2024-06-24T15:55:45.132Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e8/4f/aad03d5f711717d94d7de9684cb542343b392df1ad6889118636674fc983/pydantic_settings-2.3.4-py3-none-any.whl", hash = "sha256:11ad8bacb68a045f00e4f862c7a718c8a9ec766aa8fd4c32e39a0594b207b53a", size = 22562, upload-time = "2024-06-24T15:55:40.899Z" },
 ]
 
 [[package]]
