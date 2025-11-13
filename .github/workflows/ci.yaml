@@ -3,10 +3,10 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - 'main'
+      - '**'
   pull_request:
     branches:
-      - 'main'
+      - '**'
 
 jobs:
   test:
@@ -39,13 +39,13 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           cd backend
-          pytest tests/integration --cov=src --cov-report=xml --disable-warnings
+          pytest tests/integration --disable-warnings
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: coverage.xml
+      # - name: Upload coverage report
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: coverage-report
+      #     path: coverage.xml
 
   # lint:
   #   runs-on: ubuntu-latest
