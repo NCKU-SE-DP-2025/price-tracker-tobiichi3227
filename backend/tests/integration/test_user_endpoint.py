@@ -1,11 +1,15 @@
 import pytest
 from fastapi.testclient import TestClient
 from jose import jwt
+from passlib.context import CryptContext
 from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import sessionmaker
 
-from main import Base, User, app, pwd_context, session_opener
+from src.auth.models import User
+from src.database import Base, get_db
+from src.main import app
 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = "1892dhianiandowqd0n"
 ALGORITHM = "HS256"
 # SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
@@ -29,7 +33,7 @@ def override_session_opener():
         db.close()
 
 
-app.dependency_overrides[session_opener] = override_session_opener
+app.dependency_overrides[get_db] = override_session_opener
 
 client = TestClient(app)
 
@@ -67,6 +71,7 @@ def test_register_user():
         json={"username": "newuser", "password": "newpassword"},
     )
 
+    print(response.json(), 1110)
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "newuser"
