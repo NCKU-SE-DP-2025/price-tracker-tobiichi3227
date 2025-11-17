@@ -71,7 +71,6 @@ def test_register_user():
         json={"username": "newuser", "password": "newpassword"},
     )
 
-    print(response.json(), 1110)
     assert response.status_code == 200
     data = response.json()
     assert data["username"] == "newuser"
