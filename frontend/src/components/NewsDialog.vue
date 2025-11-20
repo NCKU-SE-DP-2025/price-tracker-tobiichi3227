@@ -1,5 +1,5 @@
 <template>
-    <div v-if="visible" class="cover">
+    <div v-if="visible" class="cover" @click.self="close">
         <div class="news-dialog">
             <i class="bi bi-x-lg close-btn" @click="close"></i>
             <div class="content">

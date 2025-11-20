@@ -25,13 +25,13 @@
         <div
             class="upvote-btn"
             @click="toggleUpvote(news.id)"
-            v-if="'upvotes' in news"
+            v-if="'upvote_cnt' in news"
         >
             <i
                 class="bi bi-fire"
                 :class="{ 'fire-upvoted': news.is_upvoted }"
             ></i>
-            <span>{{ news.upvotes }}</span>
+            <span>{{ news.upvote_cnt }}</span>
         </div>
     </div>
 </template>

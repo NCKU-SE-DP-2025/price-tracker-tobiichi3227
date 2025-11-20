@@ -80,13 +80,13 @@ export const useNewsStore = defineStore('news', {
                 console.error('News not found');
                 return;
             }
-            const currentUpvotes = this.newsList[index].upvotes;
+            const currentUpvoteCnt = this.newsList[index].upvote_cnt;
             const currentIsUpvoted = this.newsList[index].is_upvoted;
 
             if (this.newsList[index].is_upvoted) {
-                this.newsList[index].upvotes--;
+                this.newsList[index].upvote_cnt--;
             } else {
-                this.newsList[index].upvotes++;
+                this.newsList[index].upvote_cnt++;
             }
             this.newsList[index].is_upvoted = !this.newsList[index].is_upvoted;
 
@@ -98,7 +98,7 @@ export const useNewsStore = defineStore('news', {
                 console.error('Error toggling upvote: ', error);
                 this.errorMessage = 'Error toggling upvote: ' + error.message;
                 //roll back if failed
-                this.newsList[index].upvotes = currentUpvotes;
+                this.newsList[index].upvote_cnt = currentUpvoteCnt;
                 this.newsList[index].is_upvoted = currentIsUpvoted;
             }
         },
