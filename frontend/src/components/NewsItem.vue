@@ -66,8 +66,6 @@ export default {
             emit('show-dialog');
         };
         const fetchSummary = () => {
-            if (this.isLoading) return;
-            this.isLoading = true;
             emit('fetch-summary');
         };
         const toggleUpvote = (newsId) => {
