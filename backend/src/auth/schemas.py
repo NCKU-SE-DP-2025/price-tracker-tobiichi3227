@@ -12,8 +12,9 @@ class TokenResponse(BaseModel):
 
 
 class UserResponse(BaseModel):
+    id: int
     username: str
 
     @classmethod
     def model_validate(cls, user_obj):
-        return cls(username=user_obj.username)
+        return cls(id=user_obj.id, username=user_obj.username)
