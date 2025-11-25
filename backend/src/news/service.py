@@ -1,12 +1,11 @@
-import itertools
 import json
 import logging
 
-import requests
-from bs4 import BeautifulSoup
 from openai import OpenAI
 from sqlalchemy.orm import Session
 
+from src.crawler.crawler_base import NewsWithSummary
+from src.crawler.udn_crawler import UDNCrawler
 from src.news.config import news_settings
 from src.news.models import NewsArticle, user_news_association_table
 
@@ -40,10 +39,9 @@ ai_service = AIService(api_key=news_settings.OPENAI_API_KEY)
 
 
 class NewsService:
-    _id_counter = itertools.count(start=1000000)
-
-    def __init__(self, db: Session, ai_service: AIService = ai_service):
+    def __init__(self, db: Session, crawler: "UDNCrawler", ai_service: AIService = ai_service):
         self.db = db
+        self.crawler = crawler
         self.ai_service = ai_service
 
     def add_news_article(self, news_data: dict) -> NewsArticle:
@@ -64,17 +62,11 @@ class NewsService:
         return self.db.query(NewsArticle).order_by(NewsArticle.time.desc()).all()
 
     def count_upvote(self, article_id: int) -> int:
-        return (
-            self.db.query(user_news_association_table)
-            .filter_by(news_articles_id=article_id)
-            .count()
-        )
+        return self.db.query(user_news_association_table).filter_by(news_articles_id=article_id).count()
 
     def is_upvoted_by_user(self, article_id: int, user_id: int) -> bool:
         return (
-            self.db.query(user_news_association_table)
-            .filter_by(news_articles_id=article_id, user_id=user_id)
-            .first()
+            self.db.query(user_news_association_table).filter_by(news_articles_id=article_id, user_id=user_id).first()
             is not None
         )
 
@@ -92,84 +84,115 @@ class NewsService:
         else:
             from sqlalchemy import insert
 
-            insert_stmt = insert(user_news_association_table).values(
-                news_articles_id=article_id, user_id=user_id
-            )
+            insert_stmt = insert(user_news_association_table).values(news_articles_id=article_id, user_id=user_id)
             self.db.execute(insert_stmt)
             self.db.commit()
             return True
 
-    def fetch_and_process_news(
-        self, search_term: str, is_initial: bool = False
-    ) -> None:
-        raw_news = self._fetch_raw_news(search_term, is_initial)
-        for news in raw_news:
-            try:
-                self._process_single_news(news)
-            except Exception as e:
-                logging.error(f"Error processing news {news.get('titleLink')}: {e}")
+    def fetch_and_process_news(self, search_term: str, is_initial: bool = False) -> None:
+        """
+        Fetches and processes news articles from UDN.
 
-    def _process_single_news(self, raw_news: dict):
-        relevance = self.ai_service.evaluate_relevance(raw_news["title"])
-        if relevance != "high":
-            return
-        detailed = self._fetch_detailed_news(raw_news["titleLink"])
-        if not detailed:
-            return
-        summary_data = self.ai_service.summarize_news(detailed["content"])
-        detailed["summary"] = summary_data["影響"]
-        detailed["reason"] = summary_data["原因"]
-        self.add_news_article(detailed)
-
-    def _fetch_raw_news(self, search_term: str, is_initial: bool = False) -> list[dict]:
-        all_news = []
-        pages = range(1, 10) if is_initial else range(1, 2)
-        for page in pages:
-            params = {
-                "page": page,
-                "id": f"search:{search_term}",
-                "channelId": 2,
-                "type": "searchword",
-            }
-            try:
-                response = requests.get(
-                    news_settings.UDN_API_URL, params=params, timeout=10
-                )
-                all_news.extend(response.json().get("lists", []))
-            except Exception as e:
-                logging.error(f"Error fetching raw news for page {page}: {e}")
-        return all_news
-
-    def _fetch_detailed_news(self, url: str) -> dict | None:
+        :param search_term: The search term to search for.
+        :param is_initial: If True, fetches from multiple pages (pages 1-10), otherwise just page 1.
+        """
         try:
-            response = requests.get(url, timeout=10)
-            soup = BeautifulSoup(response.text, "html.parser")
-            title = soup.find("h1", class_="article-content__title").text
-            time = soup.find("time", class_="article-content__time").text
-            content_section = soup.find("section", class_="article-content__editor")
-            paragraphs = [
-                p.text
-                for p in content_section.find_all("p")
-                if p.text.strip() != "" and "▪" not in p.text
-            ]
-            return {
-                "url": url,
-                "title": title,
-                "time": time,
-                "content": "".join(paragraphs),
-                "id": next(self._id_counter),
-            }
+            # Fetch headlines based on whether it's initial or subsequent fetch
+            if is_initial:
+                headlines = self.crawler.startup(search_term)
+            else:
+                headlines = self.crawler.get_headline(search_term, page=1)
+
+            # Process each headline
+            for headline in headlines:
+                try:
+                    self._process_single_headline(headline)
+                except Exception as e:
+                    logging.error(f"Error processing headline {headline.title}: {e}")
         except Exception as e:
-            logging.error(f"Error fetching detailed from {url} news: {e}")
-            return None
+            logging.error(f"Error fetching and processing news for '{search_term}': {e}")
+
+    def _process_single_headline(self, headline):
+        """
+        Processes a single headline: evaluates relevance, fetches details, and saves to database.
+
+        :param headline: A Headline object containing title and URL.
+        """
+        # Evaluate relevance of the headline
+        relevance = self.ai_service.evaluate_relevance(headline.title)
+        if relevance != "high":
+            logging.debug(f"Skipping '{headline.title}' due to low relevance")
+            return
+
+        # Parse and extract detailed news from the URL
+        try:
+            news = self.crawler.parse(str(headline.url))
+        except Exception as e:
+            logging.error(f"Error parsing news from {headline.url}: {e}")
+            return
+
+        # Summarize the news content
+        try:
+            summary_data = self.ai_service.summarize_news(news.content)
+            summary = summary_data.get("影響", "")
+            reason = summary_data.get("原因", "")
+        except Exception as e:
+            logging.error(f"Error summarizing news: {e}")
+            return
+
+        # Create NewsWithSummary object and save to database
+        news_with_summary = NewsWithSummary(
+            title=news.title,
+            url=news.url,
+            time=news.time,
+            content=news.content,
+            summary=summary,
+            reason=reason,
+        )
+
+        try:
+            self.crawler.save(news_with_summary, self.db)
+            logging.info(f"Successfully saved article: {news.title}")
+        except Exception as e:
+            logging.error(f"Error saving article to database: {e}")
 
     def search_by_prompt(self, prompt: str) -> list:
-        keyword = self.ai_service.extract_keywords(prompt)
-        news_list = self._fetch_raw_news(keyword, is_initial=False)
-        results = []
-        for news in news_list:
-            detailed = self._fetch_detailed_news(news["titleLink"])
-            if not detailed:
-                continue
-            results.append(detailed)
-        return sorted(results, key=lambda x: x["time"], reverse=True)
+        """
+        Searches for news articles based on a user prompt.
+
+        Uses AI to extract keywords from the prompt, fetches relevant news,
+        and returns a sorted list of results.
+
+        :param prompt: The user's search prompt.
+        :return: A list of news articles sorted by time (most recent first).
+        """
+        try:
+            # Extract keywords from the prompt
+            keyword = self.ai_service.extract_keywords(prompt)
+            logging.info(f"Extracted keyword from prompt: {keyword}")
+
+            # Fetch headlines for the keyword
+            headlines = self.crawler.get_headline(keyword, page=1)
+
+            results = []
+            for headline in headlines:
+                try:
+                    # Parse detailed news for each headline
+                    news = self.crawler.parse(str(headline.url))
+                    results.append(
+                        {
+                            "url": str(news.url),
+                            "title": news.title,
+                            "time": news.time,
+                            "content": news.content,
+                        }
+                    )
+                except Exception as e:
+                    logging.error(f"Error parsing headline {headline.url}: {e}")
+                    continue
+
+            # Sort by time (most recent first)
+            return sorted(results, key=lambda x: x["time"], reverse=True)
+        except Exception as e:
+            logging.error(f"Error searching by prompt: {e}")
+            return []
