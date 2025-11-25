@@ -62,9 +62,7 @@ def test_user(clear_users):
 
 @pytest.fixture(scope="module")
 def test_token(test_user):
-    access_token = jwt.encode(
-        {"sub": test_user.username}, SECRET_KEY, algorithm=ALGORITHM
-    )
+    access_token = jwt.encode({"sub": test_user.username}, SECRET_KEY, algorithm=ALGORITHM)
     return access_token
 
 
@@ -136,9 +134,7 @@ def mock_openai(mocker, return_content):
     mock_completion = Mock()
     mock_completion.choices = [mock_choice]
 
-    mock_openai_client.return_value.chat.completions.create.return_value = (
-        mock_completion
-    )
+    mock_openai_client.return_value.chat.completions.create.return_value = mock_completion
 
     return mock_openai_client
 
@@ -146,38 +142,34 @@ def mock_openai(mocker, return_content):
 def test_search_news(mocker):
     mock_ai_service = mocker.MagicMock(spec=AIService)
     mock_ai_service.extract_keywords.return_value = "keywords"
+    mock_ai_service.summarize_news.return_value = {
+        "影響": "test impact",
+        "原因": "test reason",
+    }
 
-    def get_mocked_news_service(db=Depends(get_db)):
-        return NewsService(db, mock_ai_service)
+    # Mock the crawler's get_headline method to return test headlines
+    from src.crawler.crawler_base import Headline, News
 
-    app.dependency_overrides[get_news_service] = get_mocked_news_service
+    test_headline = Headline(title="Test Headline", url="https://example.com/news1")
 
-    mocker.patch(
-        "src.news.service.NewsService._fetch_raw_news",
-        return_value=[{"titleLink": "http://example.com/news1"}],
+    test_news = News(
+        title="Test Title", url="https://example.com/news1", time="2024-09-10", content="This is a test paragraph."
     )
 
-    mocker.patch(
-        "src.news.service.requests.get",
-        return_value=mocker.Mock(
-            text="""
-        <html>
-        <h1 class="article-content__title">Test Title</h1>
-        <time class="article-content__time">2024-09-10</time>
-        <section class="article-content__editor">
-            <p>This is a test paragraph.</p>
-        </section>
-        </html>
-        """
-        ),
-    )
+    # Mock the service's crawler methods
+    def get_mock_news_service(db=Depends(get_db)):
+        mock_crawler = mocker.MagicMock()
+        mock_crawler.get_headline.return_value = [test_headline]
+        mock_crawler.parse.return_value = test_news
+        news_service = NewsService(db, mock_crawler, mock_ai_service)
+        return news_service
+
+    app.dependency_overrides[get_news_service] = get_mock_news_service
 
     request_body = {"prompt": "Test search prompt"}
-
     response = client.post("/api/v1/news/search_news", json=request_body)
 
     assert response.status_code == 200
-
     data = response.json()
     assert len(data) == 1
     assert data[0]["title"] == "Test Title"
@@ -195,14 +187,13 @@ def test_news_summary(mocker, test_token):
     }
 
     def get_mocked_news_service(db=Depends(get_db)):
-        return NewsService(db, mock_ai_service)
+        mock_crawler = mocker.MagicMock()
+        return NewsService(db, mock_crawler, mock_ai_service)
 
     app.dependency_overrides[get_news_service] = get_mocked_news_service
 
     request_body = NewsSummaryRequest(content="Test news content")
-    response = client.post(
-        "/api/v1/news/news_summary", json=request_body.dict(), headers=headers
-    )
+    response = client.post("/api/v1/news/news_summary", json=request_body.dict(), headers=headers)
 
     assert response.status_code == 200
     json_response = response.json()
